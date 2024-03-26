@@ -17,7 +17,7 @@ with DAG('example_bigquery_dag',
 
     create_dataset = BigQueryCreateEmptyDatasetOperator(
         task_id="create_dataset", dataset_id=DATASET,
-        gcp_conn_id='google_cloud_platform'
+        gcp_conn_id='google_cloud_default'
     )
 
     create_table = BigQueryCreateEmptyTableOperator(
