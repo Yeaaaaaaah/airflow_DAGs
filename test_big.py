@@ -33,9 +33,9 @@ def load_to_bigquery():  # 함수 이름 및 설명 변경
     try:
         # Store current time in BigQuery
         # BigQuery 테이블 이름과 데이터셋 이름을 수정하여 사용합니다.
-        project_id = 'your_project_id'  # 여기에 BigQuery 프로젝트 ID를 입력하세요.
-        dataset_id = 'your_dataset_id'  # 여기에 BigQuery 데이터셋 ID를 입력하세요.
-        table_id = 'your_table_id'  # 여기에 BigQuery 테이블 ID를 입력하세요.
+        project_id = 'fluid-crane-417212'  # 여기에 BigQuery 프로젝트 ID를 입력하세요.
+        dataset_id = 'fluid-crane-417212.airflow_test'  # 여기에 BigQuery 데이터셋 ID를 입력하세요.
+        table_id = 'fluid-crane-417212.airflow_test.airflow_test_time'  # 여기에 BigQuery 테이블 ID를 입력하세요.
 
         insert_job = BigQueryInsertJobOperator(
             task_id='insert_current_time_to_bigquery',  # 태스크 이름 변경
