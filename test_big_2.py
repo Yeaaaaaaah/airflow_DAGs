@@ -8,8 +8,8 @@ default_args = {
     'start_date': datetime(2023, 3, 15),
 }
 
-DATASET = "airflow_test" 
-TABLE = "airflow_test_time"
+DATASET = "airflow_test_2" 
+TABLE = "airflow_test_time_2"
 
 with DAG('example_bigquery_dag',
          default_args=default_args,
