@@ -4,7 +4,6 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.models import Variable
 from airflow.utils.dates import days_ago
 
-
 # Default arguments
 default_args = {
     'owner': 'airflow',
@@ -21,7 +20,7 @@ dag = DAG(
     default_args=default_args,
     description='Insert current time to Airflow metadata DB every 5 seconds',
     schedule_interval=timedelta(seconds=5),
-    start_date=days_ago(1),
+    start_date=datetime(2024, 3, 26),
     catchup=False
 )
 
