@@ -18,8 +18,8 @@ default_args = {
 dag = DAG(
     'insert_current_time_to_airflow_db',
     default_args=default_args,
-    description='Insert current time to Airflow metadata DB every 5 seconds',
-    schedule_interval=timedelta(seconds=5),
+    description='Insert current time to Airflow metadata DB every 30 seconds',
+    schedule_interval=timedelta(seconds=30),
     start_date=datetime(2024, 3, 26),
     catchup=False
 )
