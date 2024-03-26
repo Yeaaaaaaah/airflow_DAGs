@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator # BigQuery Operator 추가
+from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
 from airflow.models import Variable
 from airflow.utils.dates import days_ago
 
@@ -28,7 +28,7 @@ dag = DAG(
 def get_current_time():
     return datetime.now()
 
-def load_to_bigquery():  # 함수 이름 및 설명 변경
+def load_to_bigquery():
     current_time = get_current_time()
     try:
         # Store current time in BigQuery
@@ -37,20 +37,17 @@ def load_to_bigquery():  # 함수 이름 및 설명 변경
         dataset_id = 'airflow_test'  # 여기에 BigQuery 데이터셋 ID를 입력하세요.
         table_id = 'airflow_test_time'  # 여기에 BigQuery 테이블 ID를 입력하세요.
 
-        insert_job = BigQueryInsertJobOperator(
+        query = f"INSERT INTO `{project_id}.{dataset_id}.{table_id}` (current_time) VALUES ('{current_time.strftime('%Y-%m-%d %H:%M:%S')}')"
+
+        insert_job = BigQueryExecuteQueryOperator(
             task_id='insert_current_time_to_bigquery',
-            gcp_conn_id='google_cloud_default',  # 수정된 GCP 연결 ID
-            configuration={
-                'query': {
-                    'query': f"INSERT INTO `{project_id}.{dataset_id}.{table_id}` (current_time) VALUES ('{current_time.strftime('%Y-%m-%d %H:%M:%S')}')",
-                    'useLegacySql': False  # BigQuery의 표준 SQL 사용
-                }
-            },
+            sql=query,
+            use_legacy_sql=False,  # BigQuery의 표준 SQL 사용
             location='asia-northeast2',
-            project_id=project_id,
-            dataset_id=dataset_id,
-            table_id=table_id,
+            gcp_conn_id='google_cloud_default',  # 수정된 GCP 연결 ID
+            dag=dag
         )
+        insert_job.execute(context=None)  # BigQuery 쿼리 실행
     except Exception as e:
         print(f"Failed to insert into BigQuery: {str(e)}")
 
