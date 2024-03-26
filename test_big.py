@@ -51,10 +51,6 @@ def load_to_bigquery():  # 함수 이름 및 설명 변경
             dataset_id=dataset_id,
             table_id=table_id,
         )
-
-    return insert_job.execute(context=None)
-
-        return insert_job.execute(context=None)  # BigQuery Insert 작업 실행
     except Exception as e:
         print(f"Failed to insert into BigQuery: {str(e)}")
 
