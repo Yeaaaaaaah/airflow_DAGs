@@ -44,7 +44,7 @@ def load_to_bigquery():
             sql=query,
             use_legacy_sql=False,  # BigQuery의 표준 SQL 사용
             location='asia-northeast2',
-            gcp_conn_id='google_cloud_default',  # 수정된 GCP 연결 ID
+            gcp_conn_id='google_cloud_platform',  # 수정된 GCP 연결 ID
             dag=dag
         )
         insert_job.execute(context=None)  # BigQuery 쿼리 실행
