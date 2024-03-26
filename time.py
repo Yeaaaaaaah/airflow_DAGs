@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.models import Variable
+from airflow.utils.dates import days_ago
+
 
 # Default arguments
 default_args = {
