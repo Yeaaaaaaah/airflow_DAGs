@@ -38,18 +38,19 @@ def load_to_bigquery():  # 함수 이름 및 설명 변경
         table_id = 'airflow_test_time'  # 여기에 BigQuery 테이블 ID를 입력하세요.
 
         insert_job = BigQueryInsertJobOperator(
-            task_id='insert_current_time_to_bigquery',  # 태스크 이름 변경
-            gcp_conn_id='google_cloud_platform',  # GCP 연결 ID 변경
-            project_id=project_id,
-            location='asia-northeast2',  # BigQuery 테이블이 있는 리전을 입력하세요.
-            dataset_id=dataset_id,
-            table_id=table_id,
-            configuration={
-                'query': {
-                    'query': f"INSERT INTO `{project_id}.{dataset_id}.{table_id}` (current_time) VALUES ('{current_time.strftime('%Y-%m-%d %H:%M:%S')}')"
-                }
-            },
-            dag=dag
+          task_id='insert_current_time_to_bigquery',
+          gcp_conn_id='google_cloud_platform',  # GCP 연결 ID 변경
+          project_id=project_id,
+          location='asia-northeast2',  # BigQuery 테이블이 있는 리전을 입력하세요.
+          dataset_id=dataset_id,
+          table_id=table_id,
+          template=f"""
+          INSERT INTO `{project_id}.{dataset_id}.{table_id}` (current_time) VALUES (@current_time)
+          """,
+          template_vars={
+              "current_time": "{{ ti.xcom_pull(task_ids='get_current_time') }}"
+          },
+          dag=dag
         )
 
         return insert_job.execute(context=None)  # BigQuery Insert 작업 실행
