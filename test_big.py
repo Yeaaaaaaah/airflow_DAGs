@@ -39,7 +39,7 @@ def load_to_bigquery():  # 함수 이름 및 설명 변경
 
         insert_job = BigQueryInsertJobOperator(
             task_id='insert_current_time_to_bigquery',  # 태스크 이름 변경
-            gcp_conn_id='google_cloud_platform',  # GCP 연결 ID 변경
+            gcp_conn_id='google_bigguery',  # GCP 연결 ID 변경
             project_id=project_id,
             location='asia-northeast2',  # BigQuery 테이블이 있는 리전을 입력하세요.
             dataset_id=dataset_id,
