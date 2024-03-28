@@ -44,7 +44,7 @@ def get_stock_info(code):
 
 def prepare_stock_data():
     """
-    5가지 종목의 주가 정보를 준비합니다.
+    모든 종목의 주가 정보를 준비합니다.
     """
     rows = []
     for code in CODES:
@@ -52,7 +52,7 @@ def prepare_stock_data():
         if info is not None:
             row = {
                 "code": code.split('.')[0],  # .KS 부분을 제외한 종목 코드
-                "name": stock_names.get(code.split('.')[0], 'Unknown'),  # 주식 이름 (없는 경우 'Unknown'으로 설정)
+                "name": stock_names[code.split('.')[0]],  # 주식 이름
                 "date": info.name.strftime('%Y-%m-%d'),  # 인덱스가 날짜인 경우 사용
                 "open": info["Open"],
                 "high": info["High"],
@@ -99,7 +99,7 @@ default_args = {
 
 # DAG definition
 dag = DAG(
-    '3insert_stock_info_to_bigquery',  # DAG 이름 변경
+    '2insert_stock_info_to_bigquery',  # DAG 이름 변경
     default_args=default_args,
     description='Insert stock info to BigQuery every day',  # 설명 변경
     schedule_interval=timedelta(days=1),  # 매일 실행
@@ -117,4 +117,10 @@ get_stock_info_task = PythonOperator(
 # Task to load data into BigQuery
 load_to_bigquery_task = PythonOperator(
     task_id='load_to_bigquery',
-    python_callable=load_to
+    python_callable=load_to_bigquery,
+    op_kwargs={'rows': prepare_stock_data()},
+    dag=dag
+)
+
+# Define the order of task execution
+get_stock_info_task >> load_to_bigquery_task
