@@ -72,9 +72,9 @@ def load_to_bigquery():
         table_id = 'stock_info'  # 여기에 BigQuery 테이블 ID를 입력하세요.
         stock_data = prepare_stock_data()
         insert_job_list = list()
-        query = f"INSERT INTO `{project_id}.{dataset_id}.{table_id}` (code, name, date, open, high, low, close, volume) " \
-                f"VALUES ('{row['code']}', '{row['name']}', '{row['date']}', {row['open']}, {row['high']}, {row['low']}, {row['close']}, {row['volume']});"
         for row in stock_data:
+            query = f"INSERT INTO `{project_id}.{dataset_id}.{table_id}` (code, name, date, open, high, low, close, volume) " \
+                    f"VALUES ('{row['code']}', '{row['name']}', '{row['date']}', {row['open']}, {row['high']}, {row['low']}, {row['close']}, {row['volume']});"
             task_id=f'insert_stock_info_{row["code"]}_to_bigquery'
             insert_job = BigQueryExecuteQueryOperator(
                 task_id=task_id,
@@ -88,7 +88,8 @@ def load_to_bigquery():
     except Exception as e:
         print(f"Failed to insert into BigQuery: {str(e)}")
 
-    return insert_job_list  # 함수 내에서 insert_job_list를 반환하도록 수정
+    return insert_job_list
+
 
 # load_to_bigquery 함수를 호출하여 insert_job_list를 가져옴
 insert_job_list = load_to_bigquery()
