@@ -65,9 +65,7 @@ def prepare_stock_data():
     return rows
 
 def load_to_bigquery(rows):
-    current_time = get_current_time()
     try:
-        # Store current time in BigQuery
         # BigQuery 테이블 이름과 데이터셋 이름을 수정하여 사용합니다.
         project_id = 'fluid-crane-417212'  # 여기에 BigQuery 프로젝트 ID를 입력하세요.
         dataset_id = 'airflow_test'  # 여기에 BigQuery 데이터셋 ID를 입력하세요.
