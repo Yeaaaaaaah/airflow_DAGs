@@ -99,7 +99,7 @@ default_args = {
 
 # DAG definition
 dag = DAG(
-    '3insert_stock_info_to_bigquery',  # DAG 이름 변경
+    '4insert_stock_info_to_bigquery',  # DAG 이름 변경
     default_args=default_args,
     description='Insert stock info to BigQuery every day',  # 설명 변경
     schedule_interval=timedelta(days=1),  # 매일 실행
@@ -107,20 +107,12 @@ dag = DAG(
     catchup=True
 )
 
-# Task to get stock info
-get_stock_info_task = PythonOperator(
-    task_id='get_stock_info',
-    python_callable=prepare_stock_data,
-    dag=dag
-)
-
 # Task to load data into BigQuery
 load_to_bigquery_task = PythonOperator(
     task_id='load_to_bigquery',
     python_callable=load_to_bigquery,
-    op_kwargs={'rows': prepare_stock_data()},
     dag=dag
 )
 
 # Define the order of task execution
-get_stock_info_task >> load_to_bigquery_task
+load_to_bigquery_task
