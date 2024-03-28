@@ -64,8 +64,13 @@ def prepare_stock_data():
 
 # DAG 설정
 default_args = {
-    "owner": "airflow",
-    "start_date": KST_now,
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': KST_now,  # DAG의 시작 날짜
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(seconds=5),
     "schedule_interval": None,  # 수동 실행
 }
 
