@@ -15,7 +15,7 @@ dag = DAG(
     dag_id="test_for",
     default_args=dag_args,
     start_date=datetime(2022, 1, 20),
-    schedule_interval="@once",
+    schedule_interval=timedelta(days=1),
 )
 
 # TASK 생성
