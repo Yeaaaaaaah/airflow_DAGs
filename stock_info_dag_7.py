@@ -116,9 +116,9 @@ dag = DAG(
 
 # TASK 생성
 insert_job_list = list()
-for i in len(CODES):
-    t = PythonOperator(task_id=f"task_{i}", python_callable=load_to_bigquery, dag=dag)
-    list_task.append(t)
+for code in CODES:
+    t = PythonOperator(task_id=f"task_{code}", python_callable=load_to_bigquery, op_kwargs={'code': code}, dag=dag)
+    insert_job_list.append(t)
     
 # # TASK 간 의존성 정의
 # for i in range(1, len(list_task)):
