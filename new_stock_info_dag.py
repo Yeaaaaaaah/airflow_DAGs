@@ -16,7 +16,7 @@ CODES = ['005930.KS', '035420.KS', '000660.KS', '051900.KS', '032830.KS']
 CODES_without_suffix = [code.split('.')[0] for code in CODES]
 
 # 오늘 날짜 설정
-start_date = (KST_now - timedelta(days=1)).strftime('%Y-%m-%d')
+start_date = datetime(2024, 3, 20).strftime('%Y-%m-%d')
 end_date = KST_now.strftime('%Y-%m-%d')
 
 # 주식 코드와 이름을 매핑하는 딕셔너리
@@ -93,7 +93,7 @@ dag = DAG(
     default_args=default_args,
     description='Insert stock info to BigQuery every day',
     schedule_interval=timedelta(days=1),  # 매일 실행
-    start_date=datetime(2024, 3, 27),
+    start_date=datetime(2024, 3, 20),
     catchup=False
 )
 
