@@ -99,7 +99,7 @@ default_args = {
 
 # DAG definition
 dag = DAG(
-    '2insert_stock_info_to_bigquery',  # DAG 이름 변경
+    '3insert_stock_info_to_bigquery',  # DAG 이름 변경
     default_args=default_args,
     description='Insert stock info to BigQuery every day',  # 설명 변경
     schedule_interval=timedelta(days=1),  # 매일 실행
