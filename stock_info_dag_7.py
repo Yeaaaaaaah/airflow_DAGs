@@ -71,21 +71,29 @@ def load_to_bigquery():
         dataset_id = 'airflow_test'  # 여기에 BigQuery 데이터셋 ID를 입력하세요.
         table_id = 'stock_info'  # 여기에 BigQuery 테이블 ID를 입력하세요.
         stock_data = prepare_stock_data()
+        insert_job_list = list()
+        query = f"INSERT INTO `{project_id}.{dataset_id}.{table_id}` (code, name, date, open, high, low, close, volume) " \
+                f"VALUES ('{row['code']}', '{row['name']}', '{row['date']}', {row['open']}, {row['high']}, {row['low']}, {row['close']}, {row['volume']});"
         for row in stock_data:
-            query = f"INSERT INTO `{project_id}.{dataset_id}.{table_id}` (code, name, date, open, high, low, close, volume) " \
-                    f"VALUES ('{row['code']}', '{row['name']}', '{row['date']}', {row['open']}, {row['high']}, {row['low']}, {row['close']}, {row['volume']});"
             task_id=f'insert_stock_info_{row["code"]}_to_bigquery'
             insert_job = BigQueryExecuteQueryOperator(
                 task_id=task_id,
                 sql=query,
                 use_legacy_sql=False,  # BigQuery의 표준 SQL 사용
                 location='asia-northeast2',
-                gcp_conn_id='google_cloud_default',  # 수정된 GCP 연결 ID
+                gcp_conn_id='google_cloud_default',  # GCP 연결 ID
                 dag=dag
             )
-            insert_job.execute(context=None)  # BigQuery 쿼리 실행
+            insert_job_list.append(insert_job)
     except Exception as e:
         print(f"Failed to insert into BigQuery: {str(e)}")
+
+# # TASK 생성
+# list_task = list()
+# for i in range(3):
+#     t = PythonOperator(task_id=f"task_{i}", python_callable=dump, dag=dag)
+#     list_task.append(t)
+
 
 # Default arguments
 default_args = {
@@ -107,12 +115,10 @@ dag = DAG(
     catchup=True
 )
 
-# Task to load data into BigQuery
-load_to_bigquery_task = PythonOperator(
-    task_id='load_to_bigquery',
-    python_callable=load_to_bigquery,
-    dag=dag
-)
+# TASK 간 의존성 정의
+for i in range(1, len(insert_job_list)):
+    insert_job_list[i] >> insert_job_list[i - 1]
 
-# Define the order of task execution
-load_to_bigquery_task
+# # TASK 간 의존성 정의
+# for i in range(1, len(list_task)):
+#     list_task[i] >> list_task[i - 1]
