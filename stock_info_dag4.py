@@ -95,4 +95,4 @@ load_to_bigquery_task = PythonOperator(
 )
 
 # Define the order of task execution
-get_time_task >> load_to_bigquery_task
+load_to_bigquery_task
