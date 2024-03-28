@@ -15,8 +15,8 @@ KST_now = datetime.now(KST)
 CODES = ['005930.KS', '035420.KS', '000660.KS', '051900.KS', '032830.KS']
 
 # 오늘 날짜 설정
-# start_date = (KST_now - timedelta(days=1)).strftime('%Y-%m-%d')
-start_date = datetime(2024, 1, 1).strftime('%Y-%m-%d')
+start_date = (KST_now - timedelta(days=1)).strftime('%Y-%m-%d')
+# start_date = datetime(2024, 1, 1).strftime('%Y-%m-%d')
 end_date = KST_now.strftime('%Y-%m-%d')
 
 # 주식 코드와 이름을 매핑하는 딕셔너리
@@ -96,7 +96,6 @@ default_args = {
     'email_on_retry': False,
     'retries': 1,
     'retry_delay': timedelta(seconds=5),
-    "schedule_interval": None,  # 수동 실행
 }
 
 # DAG definition
@@ -105,8 +104,8 @@ dag = DAG(
     default_args=default_args,
     description='Insert stock info to BigQuery every day',  # 설명 변경
     schedule_interval=timedelta(days=1),  # 매일 실행
-    start_date=datetime(2024, 3, 26),
-    catchup=False
+    start_date=datetime(2024, 1, 1),
+    catchup=True
 )
 
 # Task to get stock info
