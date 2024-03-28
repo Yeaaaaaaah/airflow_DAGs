@@ -88,6 +88,12 @@ def load_to_bigquery():
     except Exception as e:
         print(f"Failed to insert into BigQuery: {str(e)}")
 
+    return insert_job_list  # 함수 내에서 insert_job_list를 반환하도록 수정
+
+# load_to_bigquery 함수를 호출하여 insert_job_list를 가져옴
+insert_job_list = load_to_bigquery()
+
+
 # # TASK 생성
 # list_task = list()
 # for i in range(3):
