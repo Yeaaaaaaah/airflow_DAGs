@@ -93,7 +93,7 @@ dag = DAG(
     description='Insert stock info to BigQuery every day',
     schedule_interval=timedelta(days=1),  # 매일 실행
     start_date=datetime(2024, 1, 1),
-    catchup=True
+    catchup=False
 )
 
 # TASK 생성
