@@ -13,7 +13,6 @@ KST_now = datetime.now(KST)
 
 # 국내 유명 주식 5종목 코드
 CODES = ['005930.KS', '035420.KS', '000660.KS', '051900.KS', '032830.KS']
-CODES_without_suffix = [code.split('.')[0] for code in CODES]
 
 # 오늘 날짜 설정
 start_date = datetime(2024, 3, 20).strftime('%Y-%m-%d')
@@ -99,7 +98,7 @@ dag = DAG(
 
 # TASK 생성
 insert_job_list = []
-for code in CODES_without_suffix:
+for code in CODES:
     t = PythonOperator(
         task_id=f"insert_stock_info_{code}_to_bigquery",
         python_callable=prepare_and_load_to_bigquery,
