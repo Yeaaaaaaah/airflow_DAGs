@@ -74,9 +74,9 @@ def load_to_bigquery():
         for row in stock_data:
             query = f"INSERT INTO `{project_id}.{dataset_id}.{table_id}` (code, name, date, open, high, low, close, volume) " \
                     f"VALUES ('{row['code']}', '{row['name']}', '{row['date']}', {row['open']}, {row['high']}, {row['low']}, {row['close']}, {row['volume']});"
-
+            task_id=f'insert_stock_info_{row["code"]}_to_bigquery',
             insert_job = BigQueryExecuteQueryOperator(
-                task_id=f'insert_stock_info_{row["code"]}_to_bigquery',
+                task_id=task_id,
                 sql=query,
                 use_legacy_sql=False,  # BigQuery의 표준 SQL 사용
                 location='asia-northeast2',
