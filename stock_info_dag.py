@@ -1,5 +1,6 @@
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
 from datetime import datetime, timedelta
 from pykrx import stock
 from pytz import timezone
@@ -69,16 +70,34 @@ def update_stock_info():
             }
             rows.append(row)
 
-    # BigQuery 테이블에 데이터 삽입
-    errors = client.insert_rows(dataset_id, table_id, rows)
-    if errors:
-        print(f"데이터 삽입 실패: {errors}")
+    return rows
 
-# PythonOperator를 사용하여 DAG에 작업 추가
-update_stock_task = PythonOperator(
-    task_id='update_stock_info_task',
+# PythonOperator를 사용하여 데이터 가져오는 작업 추가
+fetch_stock_data_task = PythonOperator(
+    task_id='fetch_stock_data_task',
     python_callable=update_stock_info,
     dag=dag,
 )
 
-update_stock_task
+# BigQueryExecuteQueryOperator를 사용하여 데이터 삽입하는 작업 추가
+insert_stock_data_task = BigQueryExecuteQueryOperator(
+    task_id='insert_stock_data_task',
+    sql='''
+    INSERT INTO `fluid-crane-417212.airflow_test.stock_info`
+    (code, date, open, high, low, close, volume)
+    VALUES 
+    ('{{ task_instance.xcom_pull(task_ids="fetch_stock_data_task")[0]['code'] }}', 
+     '{{ task_instance.xcom_pull(task_ids="fetch_stock_data_task")[0]['date'] }}', 
+     '{{ task_instance.xcom_pull(task_ids="fetch_stock_data_task")[0]['open'] }}', 
+     '{{ task_instance.xcom_pull(task_ids="fetch_stock_data_task")[0]['high'] }}', 
+     '{{ task_instance.xcom_pull(task_ids="fetch_stock_data_task")[0]['low'] }}', 
+     '{{ task_instance.xcom_pull(task_ids="fetch_stock_data_task")[0]['close'] }}', 
+     '{{ task_instance.xcom_pull(task_ids="fetch_stock_data_task")[0]['volume'] }}')
+    ''',
+    location='asia-northeast2',
+    gcp_conn_id='google_cloud_default',
+    dag=dag,
+)
+
+# 작업 간 의존성 설정
+fetch_stock_data_task >> insert_stock_data_task
