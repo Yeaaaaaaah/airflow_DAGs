@@ -87,7 +87,7 @@ with DAG(
     )
 
     # BigQuery에 데이터 적재
-    bigquery_insert_task = BigQueryInsertOperator(
+    bigquery_insert_task = BigQueryInsertRowsOperator(
         task_id="bigquery_insert",
         table="airflow_test.stock_info",
         source=prepare_stock_data_task.output,
