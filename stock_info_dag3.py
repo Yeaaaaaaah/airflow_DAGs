@@ -1,7 +1,7 @@
 import yfinance as yf
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertRowsOperator
 from pytz import timezone
 from datetime import datetime, timedelta
 
