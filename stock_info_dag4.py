@@ -93,3 +93,6 @@ load_to_bigquery_task = PythonOperator(
     python_callable=load_to_bigquery,
     dag=dag
 )
+
+# Define the order of task execution
+get_time_task >> load_to_bigquery_task
