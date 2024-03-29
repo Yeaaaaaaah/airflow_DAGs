@@ -97,6 +97,9 @@ def insert_stock_info_to_bigquery(row):
   # SQL 쿼리 실행
   client.query(query)
 
+# 주식데이터 집합 준비
+rows = prepare_stock_data()
+
 # Default arguments
 default_args = {
     'owner': 'airflow',
@@ -117,13 +120,6 @@ dag = DAG(
     catchup=False
 )
 
-# Task to prepare_stock_data
-prepare_stock_data_task = PythonOperator(
-    task_id='prepare_stock_data',
-    python_callable=prepare_stock_data,
-    dag=dag
-)
-
 # TASK 생성
 insert_job_list = []
 for row in rows:
@@ -135,8 +131,6 @@ for row in rows:
     )
     insert_job_list.append(t)
 
-# TASK 간 의존성 정의
-prepare_stock_data_task >> insert_job_list
-
-# for i in range(1, len(insert_job_list)):
-#     insert_job_list[i] >> insert_job_list[i - 1]
+TASK 간 의존성 정의
+for i in range(1, len(insert_job_list)):
+    insert_job_list[i] >> insert_job_list[i - 1]
