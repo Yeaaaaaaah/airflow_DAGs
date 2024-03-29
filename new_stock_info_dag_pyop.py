@@ -131,6 +131,6 @@ for row in rows:
     )
     insert_job_list.append(t)
 
-TASK 간 의존성 정의
+# TASK 간 의존성 정의
 for i in range(1, len(insert_job_list)):
     insert_job_list[i] >> insert_job_list[i - 1]
