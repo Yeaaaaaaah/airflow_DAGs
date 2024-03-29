@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.models import Variable
 from airflow.utils.dates import days_ago
 import yfinance as yf
@@ -116,20 +116,23 @@ def insert_stock_info_to_bigquery(row):
   insert_query = get_insert_query(row)
   
   # SQL 쿼리 실행
-  try:
-      # BigQuery에 데이터를 삽입하는 작업을 생성합니다.
-      insert_job = BigQueryExecuteQueryOperator(
-          task_id='insert_stock_info_to_bigquery',
-          sql=insert_query,
-          use_legacy_sql=False,
-          location='asia-northeast2',
-          gcp_conn_id='google_cloud_default',
-          dag=dag
-      )
-      insert_job.execute(context=None)
-  except Exception as e:
-      print(f"Failed to insert into BigQuery: {str(e)}")
-
+    try:
+        # BigQuery에 데이터를 삽입하는 작업을 생성합니다.
+        insert_job = BigQueryInsertJobOperator( 
+            task_id=f"insert_stock_info_to_bigquery_{row['code']}",
+            configuration={
+                'query': {
+                    'query': insert_query,
+                    'useLegacySql': False
+                }
+            },
+            location='asia-northeast2',
+            gcp_conn_id='google_cloud_default',
+            dag=kwargs['dag']
+        )
+        insert_job.execute(context=None)
+    except Exception as e:
+        print(f"Failed to insert into BigQuery: {str(e)}")
 # 주식데이터 집합 준비
 rows = prepare_stock_data()
 
