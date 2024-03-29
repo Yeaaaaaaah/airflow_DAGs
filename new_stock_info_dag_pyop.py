@@ -7,6 +7,25 @@ from airflow.utils.dates import days_ago
 import yfinance as yf
 from pytz import timezone
 
+# Default arguments
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(seconds=5),
+}
+
+# DAG definition
+dag = DAG(
+    'pyop_insert_stock_info_to_bigquery',
+    default_args=default_args,
+    description='Insert stock info to BigQuery every day',
+    schedule_interval=timedelta(days=1),  # 매일 실행
+    start_date=datetime(2024, 3, 20),
+    catchup=False
+)
 
 # 한국 시간 오후 7시 KST
 KST = timezone('Asia/Seoul')
@@ -113,26 +132,6 @@ def insert_stock_info_to_bigquery(row):
 
 # 주식데이터 집합 준비
 rows = prepare_stock_data()
-
-# Default arguments
-default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(seconds=5),
-}
-
-# DAG definition
-dag = DAG(
-    'pyop_insert_stock_info_to_bigquery',
-    default_args=default_args,
-    description='Insert stock info to BigQuery every day',
-    schedule_interval=timedelta(days=1),  # 매일 실행
-    start_date=datetime(2024, 3, 20),
-    catchup=False
-)
 
 # TASK 생성
 insert_job_list = []
