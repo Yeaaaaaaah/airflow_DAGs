@@ -118,7 +118,7 @@ dag = DAG(
 )
 
 # Task to prepare_stock_data
-prepare_stock_data = PythonOperator(
+prepare_stock_data_task = PythonOperator(
     task_id='prepare_stock_data',
     python_callable=prepare_stock_data,
     dag=dag
