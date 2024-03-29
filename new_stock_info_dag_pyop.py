@@ -93,7 +93,7 @@ def get_insert_query(row):
   # BigQuery 테이블 이름과 데이터셋 이름을 수정하여 사용합니다.
   project_id = 'fluid-crane-417212'
   dataset_id = 'airflow_test'
-  table_id = 'stock_info'
+  table_id = 'stock_info_pykrx'
 
   # SQL 쿼리 작성
   query  = f"INSERT INTO `{project_id}.{dataset_id}.{table_id}` (code, name, date, open, high, low, close, volume) " \
