@@ -72,12 +72,12 @@ def insert_stock_info_to_bigquery(**kwargs):
     try:
         # BigQuery에 데이터를 삽입하는 작업을 생성합니다.
         insert_job = BigQueryExecuteQueryOperator(
-            task_id=f'insert_stock_info_to_bigquery_{row["code"]}',
+            task_id=f'all_insert_stock_info_to_bigquery_{row["code"]}',
             sql=insert_query,
             use_legacy_sql=False,
             location='asia-northeast2',
             gcp_conn_id='google_cloud_default',
-            dag=dag
+            dag=kwargs['dag']  # DAG 객체 전달
         )
         insert_job.execute(context=None)
     except Exception as e:
@@ -117,17 +117,11 @@ def get_insert_query(row, start_date, end_date):
 # 주식데이터 집합 준비
 rows = prepare_stock_data()
 
-# TASK 생성
-insert_job_list = []
+# TASK 생성 및 DAG에 추가
 for row in rows:
     t = PythonOperator(
-        task_id=f"insert_stock_info_to_bigquery_{row['code']}",
+        task_id=f"all_insert_stock_info_to_bigquery_{row['code']}",
         python_callable=insert_stock_info_to_bigquery,
-        op_kwargs={'row': row, 'start_date': datetime(2024, 1, 1), 'end_date': datetime(2024, 3, 28)},  # 변경된 날짜 전달
+        op_kwargs={'row': row, 'start_date': datetime(2024, 1, 1), 'end_date': datetime(2024, 3, 28), 'dag': dag},  # 변경된 날짜 전달 및 DAG 객체 전달
         dag=dag
     )
-    insert_job_list.append(t)
-
-# TASK 간 의존성 정의
-for i in range(1, len(insert_job_list)):
-    insert_job_list[i] >> insert_job_list[i - 1]
