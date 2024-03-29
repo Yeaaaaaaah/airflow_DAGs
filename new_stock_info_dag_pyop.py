@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
 from airflow.models import Variable
 from airflow.utils.dates import days_ago
 import yfinance as yf
@@ -28,53 +27,73 @@ stock_names = {
     # 추가적인 주식 코드와 이름은 필요에 따라 추가할 수 있습니다.
 }
 
-def prepare_and_load_to_bigquery(code):
+def prepare_insert_data(code):
     """
     종목 코드를 받아서 해당 종목의 주가 정보를 준비하고 BigQuery에 삽입합니다.
     """
     try:
         # 종목 정보 가져오기
         data = yf.download(code, start=start_date, end=end_date)
+    
+        # 데이터가 비어 있는 경우 예외 처리
         if data.empty:
             return None
-
         # BigQuery 쿼리 실행을 위한 데이터 준비
         rows = []
-        for code in CODES:
-            info = data.loc[code]
-            row = {
-                "code": code.split('.')[0],  # .KS 부분을 제외한 종목 코드
-                "name": stock_names[code.split('.')[0]],  # 주식 이름
-                "date": info.name.strftime('%Y-%m-%d'),  # 인덱스가 날짜인 경우 사용
-                "open": info["Open"],
-                "high": info["High"],
-                "low": info["Low"],
-                "close": info["Close"],
-                "volume": info["Volume"]
-            }
-            rows.append(row)
+        info = data.loc[code]
+        row = {
+            "code": code.split('.')[0],  # .KS 부분을 제외한 종목 코드
+            "name": stock_names[code.split('.')[0]],  # 주식 이름
+            "date": info.name.strftime('%Y-%m-%d'),  # 인덱스가 날짜인 경우 사용
+            "open": info["Open"],
+            "high": info["High"],
+            "low": info["Low"],
+            "close": info["Close"],
+            "volume": info["Volume"]
+        }
+        rows.append(row)
+    except Exception as e:
+        print(f"Failed to prepare data for code {code}: {e}")
+        return None
 
-        # BigQuery 테이블 이름과 데이터셋 이름을 수정하여 사용합니다.
-        project_id = 'fluid-crane-417212'  # 여기에 BigQuery 프로젝트 ID를 입력하세요.
-        dataset_id = 'airflow_test'  # 여기에 BigQuery 데이터셋 ID를 입력하세요.
-        table_id = 'stock_info'  # 여기에 BigQuery 테이블 ID를 입력하세요.
+    return rows
 
-        for row in rows:
-            query = f"INSERT INTO `{project_id}.{dataset_id}.{table_id}` (code, name, date, open, high, low, close, volume) " \
+
+def get_insert_query(row):
+  """
+  주어진 종목 코드에 대한 SQL 삽입 쿼리를 반환합니다.
+  """
+
+  # BigQuery 테이블 이름과 데이터셋 이름을 수정하여 사용합니다.
+  project_id = 'fluid-crane-417212'
+  dataset_id = 'airflow_test'
+  table_id = 'stock_info'
+
+  # SQL 쿼리 작성
+  query  = f"INSERT INTO `{project_id}.{dataset_id}.{table_id}` (code, name, date, open, high, low, close, volume) " \
                     f"VALUES ('{row['code']}', '{row['name']}', '{row['date']}', {row['open']}, {row['high']}, {row['low']}, {row['close']}, {row['volume']});"
 
-            insert_job = BigQueryExecuteQueryOperator(
-                task_id=f'insert_stock_info_{code}_to_bigquery',
-                sql=query,
-                use_legacy_sql=False,  # BigQuery의 표준 SQL 사용
-                location='asia-northeast2',
-                gcp_conn_id='google_cloud_default',  # 수정된 GCP 연결 ID
-                dag=dag
-            )
-            insert_job.execute(context=None)  # BigQuery 쿼리 실행
+  return query
 
-    except Exception as e:
-        print(f"Failed to insert into BigQuery: {str(e)}")
+def insert_stock_info_to_bigquery(code):
+  """
+  주식 정보를 BigQuery에 삽입합니다.
+  """
+
+  # BigQuery Client 라이브러리 import
+  from google.cloud import bigquery
+
+  # BigQuery Client 객체 생성
+  client = bigquery.Client()
+
+  # 종목 정보 준비
+  row = prepare_insert_data(code)
+
+  # SQL 쿼리 작성
+  query = get_insert_query(row)
+
+  # SQL 쿼리 실행
+  client.query(query)
 
 # Default arguments
 default_args = {
@@ -88,7 +107,7 @@ default_args = {
 
 # DAG definition
 dag = DAG(
-    'new_insert_stock_info_to_bigquery',
+    'pyop_insert_stock_info_to_bigquery',
     default_args=default_args,
     description='Insert stock info to BigQuery every day',
     schedule_interval=timedelta(days=1),  # 매일 실행
@@ -100,8 +119,8 @@ dag = DAG(
 insert_job_list = []
 for code in CODES:
     t = PythonOperator(
-        task_id=f"insert_stock_info_{code}_to_bigquery",
-        python_callable=prepare_and_load_to_bigquery,
+        task_id=f"insert_stock_info_to_bigquery_{code}",
+        python_callable=insert_stock_info_to_bigquery,
         op_kwargs={'code': code},
         dag=dag
     )
