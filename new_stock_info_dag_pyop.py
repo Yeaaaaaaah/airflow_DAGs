@@ -124,9 +124,6 @@ prepare_stock_data_task = PythonOperator(
     dag=dag
 )
 
-# prepare_stock_data_task의 반환 값을 rows 변수에 할당합니다.
-rows = prepare_stock_data()
-
 # TASK 생성
 insert_job_list = []
 for row in rows:
