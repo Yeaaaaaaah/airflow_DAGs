@@ -27,34 +27,39 @@ stock_names = {
     # 추가적인 주식 코드와 이름은 필요에 따라 추가할 수 있습니다.
 }
 
-def prepare_insert_data(code):
+def get_stock_info(code):
     """
-    종목 코드를 받아서 해당 종목의 주가 정보를 준비하고 BigQuery에 삽입합니다.
+    주어진 종목 코드의 주가 정보를 가져옵니다.
     """
     try:
         # 종목 정보 가져오기
         data = yf.download(code, start=start_date, end=end_date)
-    
-        # 데이터가 비어 있는 경우 예외 처리
         if data.empty:
-            return None
-        # BigQuery 쿼리 실행을 위한 데이터 준비
-        rows = []
-        info = data.loc[code]
-        row = {
-            "code": code.split('.')[0],  # .KS 부분을 제외한 종목 코드
-            "name": stock_names[code.split('.')[0]],  # 주식 이름
-            "date": info.name.strftime('%Y-%m-%d'),  # 인덱스가 날짜인 경우 사용
-            "open": info["Open"],
-            "high": info["High"],
-            "low": info["Low"],
-            "close": info["Close"],
-            "volume": info["Volume"]
-        }
-        rows.append(row)
+            return []
+        return data.iloc[-1]
     except Exception as e:
-        print(f"Failed to prepare data for code {code}: {e}")
+        print(f"종목 {code} 정보 가져오기 실패: {e}")
         return None
+
+def prepare_stock_data():
+    """
+    모든 종목의 주가 정보를 준비합니다.
+    """
+    rows = []
+    for code in CODES:
+        info = get_stock_info(code)
+        if info is not None:
+            row = {
+                "code": code.split('.')[0],  # .KS 부분을 제외한 종목 코드
+                "name": stock_names[code.split('.')[0]],  # 주식 이름
+                "date": info.name.strftime('%Y-%m-%d'),  # 인덱스가 날짜인 경우 사용
+                "open": info["Open"],
+                "high": info["High"],
+                "low": info["Low"],
+                "close": info["Close"],
+                "volume": info["Volume"]
+            }
+            rows.append(row)
 
     return rows
 
@@ -75,7 +80,7 @@ def get_insert_query(row):
 
   return query
 
-def insert_stock_info_to_bigquery(code):
+def insert_stock_info_to_bigquery(row):
   """
   주식 정보를 BigQuery에 삽입합니다.
   """
@@ -85,9 +90,6 @@ def insert_stock_info_to_bigquery(code):
 
   # BigQuery Client 객체 생성
   client = bigquery.Client()
-
-  # 종목 정보 준비
-  row = prepare_insert_data(code)
 
   # SQL 쿼리 작성
   query = get_insert_query(row)
@@ -115,17 +117,29 @@ dag = DAG(
     catchup=False
 )
 
+# Task to prepare_stock_data
+prepare_stock_data = PythonOperator(
+    task_id='prepare_stock_data',
+    python_callable=prepare_stock_data,
+    dag=dag
+)
+
+# prepare_stock_data_task의 반환 값을 rows 변수에 할당합니다.
+rows = prepare_stock_data()
+
 # TASK 생성
 insert_job_list = []
-for code in CODES:
+for row in rows:
     t = PythonOperator(
-        task_id=f"insert_stock_info_to_bigquery_{code}",
+        task_id=f"insert_stock_info_to_bigquery_{row['code']}",
         python_callable=insert_stock_info_to_bigquery,
-        op_kwargs={'code': code},
+        op_kwargs={'row': row},
         dag=dag
     )
     insert_job_list.append(t)
 
 # TASK 간 의존성 정의
-for i in range(1, len(insert_job_list)):
-    insert_job_list[i] >> insert_job_list[i - 1]
+prepare_stock_data >> insert_job_list
+
+# for i in range(1, len(insert_job_list)):
+#     insert_job_list[i] >> insert_job_list[i - 1]
