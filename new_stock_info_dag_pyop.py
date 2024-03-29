@@ -92,11 +92,17 @@ def insert_stock_info_to_bigquery(row):
   client = bigquery.Client()
 
   # SQL 쿼리 작성
-  query = get_insert_query(row)
+  insert_query = get_insert_query(row)
 
-  # SQL 쿼리 실행
-  client.query(query)
-
+  # BigQuery에 데이터를 삽입하는 작업을 생성합니다.
+  insert_job = BigQueryExecuteQueryOperator(
+      task_id='insert_stock_info_to_bigquery',
+      sql=insert_query,
+      use_legacy_sql=False,
+      location='asia-northeast2',
+      gcp_conn_id='google_cloud_default',
+      dag=dag
+        )
 # 주식데이터 집합 준비
 rows = prepare_stock_data()
 
