@@ -19,7 +19,7 @@ default_args = {
 
 # DAG definition
 dag = DAG(
-    'pyop_insert_stock_info_to_bigquery',
+    'group_insert_stock_info_to_bigquery',
     default_args=default_args,
     description='Insert stock info to BigQuery every day',
     schedule_interval=timedelta(days=1),  # 매일 실행
