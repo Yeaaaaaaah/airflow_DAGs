@@ -95,7 +95,8 @@ def insert_stock_info_to_bigquery(row):
 
   # SQL 쿼리 작성
   insert_query = get_insert_query(row)
-
+  
+  # SQL 쿼리 실행
   try:
       # BigQuery에 데이터를 삽입하는 작업을 생성합니다.
       insert_job = BigQueryExecuteQueryOperator(
