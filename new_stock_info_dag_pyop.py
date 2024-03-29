@@ -136,7 +136,7 @@ for row in rows:
     insert_job_list.append(t)
 
 # TASK 간 의존성 정의
-prepare_stock_data >> insert_job_list
+prepare_stock_data_task >> insert_job_list
 
 # for i in range(1, len(insert_job_list)):
 #     insert_job_list[i] >> insert_job_list[i - 1]
