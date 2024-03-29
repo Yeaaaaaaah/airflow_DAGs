@@ -118,6 +118,7 @@ def get_insert_query(row, start_date, end_date):
 rows = prepare_stock_data()
 
 # TASK 생성 및 DAG에 추가
+insert_job_list = []
 for row in rows:
     t = PythonOperator(
         task_id=f"all_insert_stock_info_to_bigquery_{row['code']}",
@@ -125,3 +126,8 @@ for row in rows:
         op_kwargs={'row': row, 'start_date': datetime(2024, 1, 1), 'end_date': datetime(2024, 3, 28), 'dag': dag},  # 변경된 날짜 전달 및 DAG 객체 전달
         dag=dag
     )
+    insert_job_list.append(t)
+
+# TASK 간 의존성 정의
+for i in range(1, len(insert_job_list)):
+    insert_job_list[i] >> insert_job_list[i - 1]
