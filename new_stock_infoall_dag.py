@@ -16,7 +16,7 @@ default_args = {
 
 # DAG definition
 dag = DAG(
-    'all_insert_stock_info_to_bigquery',
+    'pyop_insert_stock_info_to_bigquery',
     default_args=default_args,
     description='Insert stock info to BigQuery every day',
     schedule_interval=timedelta(days=1),  # 매일 실행
@@ -27,6 +27,15 @@ dag = DAG(
 
 # 국내 유명 주식 5종목 코드
 CODES = ['005930.KS', '035420.KS', '000660.KS', '051900.KS', '032830.KS']
+
+# 주식 코드와 이름을 매핑하는 딕셔너리
+stock_names = {
+    '005930': '삼성전자',
+    '035420': 'NAVER',
+    '000660': 'SK하이닉스',
+    '051900': 'LG화학',
+    '032830': '삼성생명',
+}
 
 def get_stock_info(code, start_date, end_date):
     """
