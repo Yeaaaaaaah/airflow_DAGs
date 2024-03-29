@@ -101,38 +101,49 @@ def get_insert_query(row):
 
   return query
 
-def insert_stock_info_to_bigquery(row):
-  """
-  주식 정보를 BigQuery에 삽입합니다.
-  """
+def insert_stock_info_to_bigquery(rows):
+    """
+    주식 정보를 BigQuery에 삽입합니다.
+    """
 
-  # BigQuery Client 라이브러리 import
-  from google.cloud import bigquery
+    # BigQuery Client 라이브러리 import
+    from google.cloud import bigquery
 
-  # BigQuery Client 객체 생성
-  client = bigquery.Client()
+    # BigQuery Client 객체 생성
+    client = bigquery.Client()
 
-  # SQL 쿼리 작성
-  insert_query = get_insert_query(row)
-  
-  # SQL 쿼리 실행
-  try:
-      # BigQuery에 데이터를 삽입하는 작업을 생성합니다.
-      insert_job = BigQueryInsertJobOperator( 
-          task_id=f"insert_stock_info_to_bigquery_{row['code']}",
-          configuration={
-              'query': {
-                  'query': insert_query,
-                  'useLegacySql': False
-              }
-          },
-          location='asia-northeast2',
-          gcp_conn_id='google_cloud_default',
-          dag=kwargs['dag']
-      )
-      insert_job.execute(context=None)
-  except Exception as e:
-      print(f"Failed to insert into BigQuery: {str(e)}")
+    # 모든 종목 데이터를 담을 리스트
+    all_rows = []
+
+    # 모든 종목 데이터를 담은 리스트를 하나의 쿼리로 변환
+    for row in rows:
+        insert_query = get_insert_query(row)
+        all_rows.append(insert_query)
+
+    # 모든 종목 데이터를 하나의 쿼리로 묶음
+    all_query = "\n".join(all_rows)
+
+    # SQL 쿼리 실행
+    try:
+        # BigQuery에 데이터를 삽입하는 작업을 생성합니다.
+        insert_job = BigQueryInsertJobOperator( 
+            task_id=f"insert_stock_info_to_bigquery",
+            configuration={
+                'query': {
+                    'query': all_query,
+                    'useLegacySql': False
+                }
+            },
+            location='asia-northeast2',
+            gcp_conn_id='google_cloud_default',
+            dag=kwargs['dag']
+        )
+        insert_job.execute(context=None)
+    except Exception as e:
+        print(f"Failed to insert into BigQuery: {str(e)}")
+
+
+
 # 주식데이터 집합 준비
 rows = prepare_stock_data()
 
