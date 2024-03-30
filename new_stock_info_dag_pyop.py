@@ -35,7 +35,7 @@ KST_now = datetime.now(KST)
 CODES = ['005930.KS', '035420.KS', '000660.KS', '051900.KS', '032830.KS']
 
 # 오늘 날짜 설정
-start_date = datetime(2024, 3, 20).strftime('%Y-%m-%d')
+start_date = (KST_now - timedelta(days=1)).strftime('%Y-%m-%d')
 end_date = KST_now.strftime('%Y-%m-%d')
 
 # 주식 코드와 이름을 매핑하는 딕셔너리
